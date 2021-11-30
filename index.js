@@ -3,8 +3,9 @@ const app = express()           //func이용하여 새로운 express 생성
 const port = 5000               //포트번호
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-
 const config = require('./config/key');
+
+const {auth} = require('./middleware/auth');
 const {User} = require("./models/User");
 
 
@@ -22,7 +23,7 @@ app.get('/', (req, res) => {
 })
 
 //회원가입
-app.post('/register', (req,res) =>{
+app.post('/api/users/register', (req,res) =>{
   //회원가입할때 필요한 정보들을 client에서 가져오기 (User.js)
   //그것들을 DB에 넣어주기
 
@@ -37,7 +38,7 @@ app.post('/register', (req,res) =>{
 })
 
 //로그인
-app.post('/login',(req,res)=>{
+app.post('/api/users/login',(req,res)=>{
   //1. 요청 된 이메일이 DB에서 있는지 찾기
   User.findOne({email:req.body.email}, (err,user)=>{
     if(!user){ //해당 유저가 없다면
@@ -70,6 +71,41 @@ app.post('/login',(req,res)=>{
 
   })
 })
+
+
+//인증 auth route
+app.get('/api/users/auth', auth ,(req,res)=>{
+  //여기까지 미들웨어를 통과해왔다는 얘기는 Authentication이 True라는 말
+  res.status(200).json({
+    _id: req.user._id,
+    isAdmin: req.user.role === 0 ? false : true, //0(일반유저)이면 f / 1(관리자)이면 t
+    isAuth: true,
+
+    email : req.user.email,
+    name: req.user.name,
+    lastname: req.user.lastname,
+    role: req.user.role,
+    image:req.user.image
+  })
+
+})
+
+
+//로그아웃 route
+app.get('/api/users/logout',auth, (req,res) =>{
+
+  //1.로그아웃하려는 유저 찾기
+  User.findOneAndUpdate({_id: req.user._id},
+    {token: ""},   //토큰 지우기
+    (err,user)=>{ 
+      if(err) return res.json({success:false, err}); //에러 시
+      return res.status(200).send({ //성공 시
+        success: true
+      })
+    }
+    )
+})
+
 
 
 

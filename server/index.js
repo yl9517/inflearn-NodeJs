@@ -4,23 +4,31 @@ const port = 5000               //포트번호
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const config = require('./config/key');
-
 const {auth} = require('./middleware/auth');
 const {User} = require("./models/User");
 
-
+//aplication/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended:true}));
+
+//application/json
 app.use(bodyParser.json());
 app.use(cookieParser());
 
 const mongoose = require('mongoose')
 mongoose.connect(config.mongoURI)
 .then(()=> console.log('MongoDB Connected...'))
-  .catch(err => console.log(err))
+  .catch(err => console.log('MongoDB error:',err))
 
 app.get('/', (req, res) => { 
   res.send('Hello World!안녕하세요! 인프런테스트중 backen')
 })
+
+//랜딩페이지
+app.get('/api/hello', (req, res) => {
+  res.send("Hi~~ proxy 설정완료")
+})
+
+
 
 //회원가입
 app.post('/api/users/register', (req,res) =>{
